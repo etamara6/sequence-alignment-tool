@@ -50,7 +50,7 @@ Make sure you have Node.js installed:
 npm install
 npm start
 ```
-Then open your browser at `http://localhost:3000`
+Then open your browser at `http://localhost:3001`
 
 ---
 

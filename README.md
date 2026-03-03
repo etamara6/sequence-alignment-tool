@@ -32,6 +32,8 @@ sequence-alignment-tool/
 ├── README.md                   # This file
 ├── package.json                # React dependencies
 └── package-lock.json           # Locked dependency versions
+└── requirements.txt
+└── LICENSE   
 ```
 
 ---

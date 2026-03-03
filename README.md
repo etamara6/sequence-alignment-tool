@@ -9,7 +9,6 @@ An interactive genomic sequence alignment tool implementing three core bioinform
 
 - **Needleman-Wunsch** — global pairwise alignment (exact, O(mn))
 - **Smith-Waterman** — local pairwise alignment (exact, O(mn))
-- **BLAST-like heuristic** — seed-and-extend approximate search (fast, ~O(n))
 
 All algorithms are implemented from scratch with NumPy anti-diagonal vectorisation for performance optimization.
 

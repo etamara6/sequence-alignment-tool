@@ -1,6 +1,6 @@
 # Sequence Alignment Studio
 
-**Live Demo:** [https://etamara6.github.io/sequence-alignment-tool/](https://etamara6.github.io/sequence-alignment-tool/)
+**Live Demo:** [https://etamara6.github.io/sequence-alignment-tool/](https://etamara6.github.io/)
 
  <!-- TODO: Add a screenshot of your app -->
 

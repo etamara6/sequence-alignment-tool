@@ -1,6 +1,5 @@
 import { needlemanWunsch, smithWaterman } from "./algorithms";
 
-// ── Needleman-Wunsch ──────────────────────────────────────────────────────────
 
 describe("needlemanWunsch", () => {
   test("identical sequences score at maximum", () => {
@@ -20,10 +19,11 @@ describe("needlemanWunsch", () => {
     expect(r.a1.length).toBe(r.a2.length);
   });
 
-  test("empty sequence returns score 0", () => {
+  test("empty sequence returns correct gap-penalized score", () => {
     const r = needlemanWunsch("", "ACGT", 2, -1, -2);
-    expect(r.score).toBe(0);
-    expect(r.a1).toBe("");
+    expect(r.score).toBe(-8); // FIX: Score is 4 * -2 (gap penalty)
+    expect(r.a1).toBe("----"); // FIX: Aligned string is all gaps
+    expect(r.a2).toBe("ACGT");
   });
 
   test("single character match", () => {
@@ -38,7 +38,7 @@ describe("needlemanWunsch", () => {
   });
 });
 
-// ── Smith-Waterman ────────────────────────────────────────────────────────────
+// ── Smith-Waterman ──────────────────────────────────────────────────────────[...]
 
 describe("smithWaterman", () => {
   test("score is always non-negative", () => {

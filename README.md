@@ -1,3 +1,4 @@
+
 # 🧬 Sequence Alignment Tool
 
 An interactive genomic sequence alignment tool implementing three core bioinformatics algorithms from scratch, with a React visualizer frontend.

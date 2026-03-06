@@ -174,32 +174,28 @@ def smith_waterman(
             elapsed_ms=elapsed, matrix=None,
         )
 
-    s1 = np.array(list(seq1))
-    s2 = np.array(list(seq2))
-    sub = np.where(s1[:, None] == s2[None, :], scheme.match, scheme.mismatch).astype(np.int32)
-
     dp  = np.zeros((m + 1, n + 1), dtype=np.int32)
     ptr = np.zeros((m + 1, n + 1), dtype=np.uint8)
 
-    for d in range(m + n - 1):
-        r_start = max(0, d - n + 1)
-        r_end   = min(m - 1, d) + 1
-        rows = np.arange(r_start, r_end, dtype=np.int32)
-        cols = d - rows
+    # Standard row-by-row fill (avoids tie-breaking issues in anti-diagonal approach)
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            s = scheme.match if seq1[i - 1] == seq2[j - 1] else scheme.mismatch
+            diag = dp[i - 1, j - 1] + s
+            up   = dp[i - 1, j    ] + GAP
+            left = dp[i,     j - 1] + GAP
+            best = max(diag, up, left, 0)
+            dp[i, j] = best
+            if best == 0:
+                ptr[i, j] = _STOP
+            elif best == diag:
+                ptr[i, j] = _DIAG
+            elif best == up:
+                ptr[i, j] = _UP
+            else:
+                ptr[i, j] = _LEFT
 
-        diag = dp[rows,     cols    ] + sub[rows - 1, cols - 1]
-        up   = dp[rows,     cols + 1] + GAP
-        left = dp[rows + 1, cols    ] + GAP
-
-        best = np.maximum(np.maximum(np.maximum(diag, up), left), 0)
-        dp[rows + 1, cols + 1] = best
-
-        p = np.where(best == 0, _STOP,
-            np.where(best == diag, _DIAG,
-            np.where(best == up,   _UP,   _LEFT))).astype(np.uint8)
-        ptr[rows + 1, cols + 1] = p
-
-    max_score = dp.max()
+    max_score = int(dp.max())
     i, j = map(int, np.unravel_index(dp.argmax(), dp.shape))
 
     a1, a2 = [], []
@@ -221,7 +217,7 @@ def smith_waterman(
     return AlignmentResult(
         seq1_aligned=a1,
         seq2_aligned=a2,
-        score=int(max_score),
+        score=max_score,
         identity=identity,
         algorithm="Smith-Waterman (local)",
         elapsed_ms=elapsed,
@@ -368,3 +364,4 @@ def demo() -> None:
 
 if __name__ == "__main__":
     demo()
+

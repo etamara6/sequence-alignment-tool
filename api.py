@@ -1,5 +1,6 @@
-
 from __future__ import annotations
+
+import os
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -41,7 +42,7 @@ def align():
         return jsonify({"error": f"Unknown algorithm '{algorithm}'."}), 400
 
     if len(seq1) > _MAX_LEN or len(seq2) > _MAX_LEN:
-        return jsonify({"error": f"Sequences must be ≤ {_MAX_LEN} characters."}), 400
+        return jsonify({"error": f"Sequences must be <= {_MAX_LEN} characters."}), 400
 
     try:
         scheme = ScoringScheme(
@@ -65,49 +66,6 @@ def align():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
-    return jsonify({"status": "ok"}), 200
-
-
-@app.post("/api/align")
-def align():
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"error": "Request body must be JSON."}), 400
-
-    seq1 = data.get("seq1", "").strip().upper()
-    seq2 = data.get("seq2", "").strip().upper()
-    algorithm = data.get("algorithm", "needleman_wunsch")
-
-    if algorithm not in _ALGORITHMS:
-        return jsonify({"error": f"Unknown algorithm '{algorithm}'."}), 400
-
-    if len(seq1) > _MAX_LEN or len(seq2) > _MAX_LEN:
-        return jsonify({"error": f"Sequences must be ≤ {_MAX_LEN} characters."}), 400
-
-    try:
-        scheme = ScoringScheme(
-            match=int(data.get("match", 2)),
-            mismatch=int(data.get("mismatch", -1)),
-            gap_open=int(data.get("gap_open", -2)),
-        )
-    except (ValueError, TypeError) as exc:
-        return jsonify({"error": f"Invalid scoring parameter: {exc}"}), 400
-
-    result: AlignmentResult = _ALGORITHMS[algorithm](seq1, seq2, scheme)
-
-    return jsonify({
-        "seq1_aligned": result.seq1_aligned,
-        "seq2_aligned": result.seq2_aligned,
-        "score":        result.score,
-        "identity":     round(result.identity, 4),
-        "algorithm":    result.algorithm,
-        "elapsed_ms":   round(result.elapsed_ms, 3),
-    }), 200
-
-
-if __name__ == "__main__":
-    import os
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
 

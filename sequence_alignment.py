@@ -68,6 +68,31 @@ def needleman_wunsch(
     m, n = len(seq1), len(seq2)
     GAP = scheme.gap_open
 
+    if m == 0 and n == 0:
+        elapsed = (time.perf_counter() - t0) * 1000
+        return AlignmentResult(
+            seq1_aligned="", seq2_aligned="",
+            score=0, identity=0.0,
+            algorithm="Needleman-Wunsch (global)",
+            elapsed_ms=elapsed, matrix=None,
+        )
+    if m == 0:
+        elapsed = (time.perf_counter() - t0) * 1000
+        return AlignmentResult(
+            seq1_aligned="-" * n, seq2_aligned=seq2,
+            score=GAP * n, identity=0.0,
+            algorithm="Needleman-Wunsch (global)",
+            elapsed_ms=elapsed, matrix=None,
+        )
+    if n == 0:
+        elapsed = (time.perf_counter() - t0) * 1000
+        return AlignmentResult(
+            seq1_aligned=seq1, seq2_aligned="-" * m,
+            score=GAP * m, identity=0.0,
+            algorithm="Needleman-Wunsch (global)",
+            elapsed_ms=elapsed, matrix=None,
+        )
+
     s1 = np.frompyfunc(lambda c: c, 1, 1)(np.array(list(seq1)))
     s2 = np.frompyfunc(lambda c: c, 1, 1)(np.array(list(seq2)))
     sub = np.where(
@@ -139,6 +164,15 @@ def smith_waterman(
 
     m, n = len(seq1), len(seq2)
     GAP = scheme.gap_open
+
+    if m == 0 or n == 0:
+        elapsed = (time.perf_counter() - t0) * 1000
+        return AlignmentResult(
+            seq1_aligned="", seq2_aligned="",
+            score=0, identity=0.0,
+            algorithm="Smith-Waterman (local)",
+            elapsed_ms=elapsed, matrix=None,
+        )
 
     s1 = np.array(list(seq1))
     s2 = np.array(list(seq2))

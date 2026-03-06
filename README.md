@@ -1,76 +1,174 @@
-# Sequence Alignment Studio
+# 🧬 Sequence Alignment Studio
 
-A high-performance genomic sequence alignment tool built to demonstrate modern web development and algorithmic skills. This application provides a rich user interface for running both global (Needleman-Wunsch) and local (Smith-Waterman) alignments. It features dual implementations in Python and JavaScript, showcasing versatility across different technology stacks.
+![CI](https://github.com/etamara6/sequence-alignment-tool/actions/workflows/ci.yml/badge.svg)
+[![Python](https://img.shields.io/badge/python-3.8%2B-3776ab?logo=python&logoColor=white)](https://www.python.org/)
+[![React](https://img.shields.io/badge/react-18-61dafb?logo=react&logoColor=black)](https://reactjs.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
+> An interactive, full-stack genomic sequence alignment tool — visualise Needleman-Wunsch and Smith-Waterman in real time, powered by a Python/Flask backend and a React frontend.
 
-## 🌟 Features
+---
 
-*   **Dual Algorithm Support:** Implements both Needleman-Wunsch for global alignments and Smith-Waterman for local alignments.
-*   **Interactive UI:** A polished and responsive interface built with React for setting sequences and scoring parameters.
-*   **Dynamic Programming Matrix Visualization:** Displays the complete DP matrix as a heatmap, providing insight into the algorithm's process.
-*   **BLOSUM62 Scoring:** Includes support for the BLOSUM62 substitution matrix for protein sequence alignments.
-*   **Performance-Optimized:** The JavaScript implementation uses TypedArrays for memory efficiency, while the Python version uses NumPy for vectorized calculations.
-*   **Text Export:** Results, including the alignment, score, and identity, can be exported to a `.txt` file.
+## 🧠 What This Project Demonstrates
 
-## 🛠️ Tech Stack
+| Skill | How it shows up |
+|---|---|
+| Algorithm implementation | NW & SW from scratch in both Python (NumPy) and JavaScript (TypedArrays) |
+| Full-stack integration | React ↔ Flask REST API, CORS, JSON contract |
+| Software engineering | Dataclasses, type hints, edge-case handling, clean separation of concerns |
+| Testing discipline | pytest + pytest-cov on Python; Jest on JS; CI on every push |
+| Bioinformatics knowledge | BLOSUM62, gap penalties, traceback, identity calculation |
 
-*   **Frontend:** React.js, HTML5, CSS3
-*   **Backend/Algorithm Logic:**
-    *   JavaScript (ES6+)
-    *   Python 3 with NumPy
-*   **Testing:** Jest, React Testing Library
-*   **CI/CD:** GitHub Actions
+---
 
-## 🚀 Getting Started
+## 🔬 Algorithm Deep Dive
+
+### Needleman-Wunsch — Global Alignment
+
+Globally aligns two sequences end-to-end. Optimal when sequences are of similar length and believed to be homologous throughout.
+
+**Recurrence:**
+```
+dp[i][j] = max(
+    dp[i-1][j-1] + sub(seq1[i], seq2[j]),   # match/mismatch
+    dp[i-1][j]   + gap,                       # deletion
+    dp[i][j-1]   + gap                        # insertion
+)
+```
+Initialisation: `dp[i][0] = i × gap`, `dp[0][j] = j × gap`  
+Traceback: from `dp[m][n]` → `dp[0][0]`
+
+### Smith-Waterman — Local Alignment
+
+Finds the highest-scoring local sub-alignment. Best for spotting conserved domains between divergent sequences.
+
+**Key difference from NW:**
+```
+dp[i][j] = max(0, diag, up, left)   # floor at zero
+```
+Traceback: from the **maximum cell** → stops at first `0`
+
+### Scoring Parameters
+
+| Parameter | Default | Effect |
+|---|---|---|
+| Match | `+2` | Reward for identical residues |
+| Mismatch | `-1` | Penalty for substitution |
+| Gap open | `-2` | Penalty per gap character |
+
+---
+
+## 📥 Example
+
+**Input**
+```
+Sequence 1:  ACGTTGCATGCA
+Sequence 2:  ACGTCATGCA
+Algorithm:   Needleman-Wunsch
+```
+
+**Output**
+```
+Algorithm : Needleman-Wunsch (global)
+Score     : 16
+Identity  : 83.3%
+Time      : 0.41 ms
+
+  ACGTTGCATGCA
+  |||| |||||||
+  ACGT-CATGCA
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────┐        HTTP/JSON        ┌──────────────────────────┐
+│   React Frontend        │ ──── POST /api/align ──▶ │   Flask Backend          │
+│   src/App.js            │ ◀─── AlignmentResult ─── │   api.py                 │
+│   src/algorithms.js     │                          │   sequence_alignment.py  │
+│   (JS fallback impl.)   │                          │   (NumPy-powered)        │
+└─────────────────────────┘                          └──────────────────────────┘
+```
+
+- The **React app** handles all UI, input validation, and DP matrix heatmap rendering.
+- The **Flask API** exposes `POST /api/align` — the Python implementation runs on the server.
+- The **JS implementation** in `src/algorithms.js` serves as a client-side fallback and is independently tested with Jest.
+
+---
+
+## 🚀 Running Locally
 
 ### Prerequisites
+- Node.js ≥ 16 & npm ≥ 8
+- Python 3.8+
 
-*   Node.js (v16 or later)
-*   npm (v8 or later)
+### Step 1 — Clone
+```bash
+git clone https://github.com/etamara6/sequence-alignment-tool.git
+cd sequence-alignment-tool
+```
 
-### Running the React Application
+### Step 2 — Start the Python API
+```bash
+pip install -r requirements.txt
+python api.py
+# → http://localhost:5000
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/etamara6/sequence-alignment-tool.git
-    cd sequence-alignment-tool
-    ```
+### Step 3 — Start the React app
+```bash
+npm install
+npm start
+# → http://localhost:3000  (proxies /api/* to Flask automatically)
+```
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+### Step 4 — (Optional) Python CLI demo
+```bash
+python sequence_alignment.py
+```
 
-3.  **Start the development server:**
-    The application will be available at `http://localhost:3000`.
-    ```bash
-    npm start
-    ```
-
-### Running the Python Implementation
-
-The Python script `sequence_alignment.py` contains the backend logic and a command-line demo.
-
-1.  **Prerequisites:**
-    *   Python 3.8+
-    *   NumPy
-
-2.  **Install NumPy:**
-    ```bash
-    pip install numpy
-    ```
-
-3.  **Run the demo:**
-    ```bash
-    python sequence_alignment.py
-    ```
+---
 
 ## 🧪 Testing
 
-The project is configured with Jest and React Testing Library. To run the test suite:
+### Python
+```bash
+pytest --cov=. --cov-report=term-missing
+```
 
+### JavaScript
 ```bash
 npm test
 ```
 
-All tests run automatically on every push to the `main` branch via the GitHub Actions CI workflow.
+CI runs both suites automatically on every push via GitHub Actions.
+
+---
+
+## 📁 Project Structure
+
+```
+sequence-alignment-tool/
+├── .github/workflows/ci.yml        # CI — JS + Python, with coverage
+├── public/                         # Static HTML shell
+├── src/
+│   ├── App.js                      # Main React component + UI logic
+│   ├── algorithms.js               # JS NW + SW (TypedArrays)
+│   ├── algorithms.test.js          # Jest tests for JS algorithms
+│   ├── validation.js               # Sequence input validation
+│   └── App.test.js
+├── tests/
+│   └── test_sequence_alignment.py  # pytest suite — NW, SW, edge cases
+├── api.py                          # Flask REST API
+├── sequence_alignment.py           # Python NW + SW + BLAST-like engine
+├── requirements.txt
+└── package.json
+```
+
+---
+
+## 📄 License
+
+MIT © [etamara6](https://github.com/etamara6)

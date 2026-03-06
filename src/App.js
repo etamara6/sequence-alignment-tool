@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import "./App.css";
 import { needlemanWunsch, smithWaterman } from "./algorithms";
 
-// ── MatrixHeatmap ─────────────────────────────────────────────────────────────
+// ── MatrixHeatmap ───────────────────────────────────────────────────────────
 function MatrixHeatmap({ dp, seq1, seq2, maxI, maxJ, algorithm }) {
   if (!dp) return (
     <div className="matrix-placeholder">Run alignment to see the matrix~</div>
@@ -68,7 +68,7 @@ function MatrixHeatmap({ dp, seq1, seq2, maxI, maxJ, algorithm }) {
   );
 }
 
-// ── AlignedPair ───────────────────────────────────────────────────────────────
+// ── AlignedPair ───────────────────────────────────────────────────────────
 function AlignedPair({ a1, a2 }) {
   if (!a1) return null;
   const mid = a1.split("").map((c, i) =>
@@ -109,7 +109,7 @@ function AlignedPair({ a1, a2 }) {
   );
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
+// ── App ───────────────────────────────────────────────────────────────────
 const PRESETS = [
   { label: "✿ Similar",   s1: "ACGTTGCATGCA",           s2: "ACGTCATGCA"         },
   { label: "✿ Divergent", s1: "GCTAGCTAGCTA",           s2: "ATGATGATGATG"       },

@@ -1,75 +1,76 @@
+# Sequence Alignment Studio
 
-# 🧬 Sequence Alignment Tool
+A high-performance genomic sequence alignment tool built to demonstrate modern web development and algorithmic skills. This application provides a rich user interface for running both global (Needleman-Wunsch) and local (Smith-Waterman) alignments. It features dual implementations in Python and JavaScript, showcasing versatility across different technology stacks.
 
-An interactive genomic sequence alignment tool implementing three core bioinformatics algorithms from scratch, with a React visualizer frontend.
 
----
+## 🌟 Features
 
-## ✦ Algorithms Implemented
+*   **Dual Algorithm Support:** Implements both Needleman-Wunsch for global alignments and Smith-Waterman for local alignments.
+*   **Interactive UI:** A polished and responsive interface built with React for setting sequences and scoring parameters.
+*   **Dynamic Programming Matrix Visualization:** Displays the complete DP matrix as a heatmap, providing insight into the algorithm's process.
+*   **BLOSUM62 Scoring:** Includes support for the BLOSUM62 substitution matrix for protein sequence alignments.
+*   **Performance-Optimized:** The JavaScript implementation uses TypedArrays for memory efficiency, while the Python version uses NumPy for vectorized calculations.
+*   **Text Export:** Results, including the alignment, score, and identity, can be exported to a `.txt` file.
 
-- **Needleman-Wunsch** — global pairwise alignment (exact, O(mn))
-- **Smith-Waterman** — local pairwise alignment (exact, O(mn))
+## 🛠️ Tech Stack
 
-All algorithms are implemented from scratch with NumPy anti-diagonal vectorisation for performance optimization.
+*   **Frontend:** React.js, HTML5, CSS3
+*   **Backend/Algorithm Logic:**
+    *   JavaScript (ES6+)
+    *   Python 3 with NumPy
+*   **Testing:** Jest, React Testing Library
+*   **CI/CD:** GitHub Actions
 
----
+## 🚀 Getting Started
 
-## ✦ Project Structure
+### Prerequisites
 
+*   Node.js (v16 or later)
+*   npm (v8 or later)
+
+### Running the React Application
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/etamara6/sequence-alignment-tool.git
+    cd sequence-alignment-tool
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Start the development server:**
+    The application will be available at `http://localhost:3000`.
+    ```bash
+    npm start
+    ```
+
+### Running the Python Implementation
+
+The Python script `sequence_alignment.py` contains the backend logic and a command-line demo.
+
+1.  **Prerequisites:**
+    *   Python 3.8+
+    *   NumPy
+
+2.  **Install NumPy:**
+    ```bash
+    pip install numpy
+    ```
+
+3.  **Run the demo:**
+    ```bash
+    python sequence_alignment.py
+    ```
+
+## 🧪 Testing
+
+The project is configured with Jest and React Testing Library. To run the test suite:
+
+```bash
+npm test
 ```
-sequence-alignment-tool/
-│
-├── sequence_alignment.py       # Python backend — all three algorithms
-│
-├── src/
-│   └── App.js                  # React visualizer (interactive frontend)
-│
-├── public/
-│   └── index.html              # HTML entry point
-│
-├── .gitignore                  # Git ignore rules
-├── README.md                   # This file
-├── package.json                # React dependencies
-└── package-lock.json           # Locked dependency versions
-└── requirements.txt
-└── LICENSE   
-```
 
----
-
-## ✦ How to Run
-
-### Python (algorithms only)
-Make sure you have Python 3.9+ and NumPy installed:
-```
-pip install numpy
-python sequence_alignment.py
-```
-
-### React Visualizer (interactive UI)
-Make sure you have Node.js installed:
-```
-npm install
-npm start
-```
-Then open your browser at `http://localhost:3001`
-
----
-
-## ✦ Features
-
-- Interactive alignment of custom DNA/protein sequences
-- Toggle between Global (NW) and Local (SW) alignment
-- Adjustable scoring parameters (match, mismatch, gap)
-- Color-coded alignment view with match ♡ indicators
-- DP matrix heatmap visualization
-- Preset example sequences to try
-- Performance timing for each alignment
-
----
-
-## ✦ Built With
-
-- Python 3.9+
-- NumPy
-- React (Create React App)
+All tests run automatically on every push to the `main` branch via the GitHub Actions CI workflow.

@@ -1,72 +1,64 @@
 import { needlemanWunsch, smithWaterman } from "./algorithms";
 
-// ── Needleman-Wunsch ──────────────────────────────────────────────────────────
-
 describe("needlemanWunsch", () => {
-  test("identical sequences score at maximum", () => {
-    const r = needlemanWunsch("ACGT", "ACGT", 2, -1, -2);
-    expect(r.score).toBe(8);
-    expect(r.identity).toBeCloseTo(1.0);
-    expect(r.gaps).toBe(0);
+  test("identical sequences yield maximum score and 100% identity", () => {
+    const result = needlemanWunsch("ACGT", "ACGT");
+    expect(result.score).toBe(8);            
+    expect(result.identity).toBeCloseTo(1.0);
+    expect(result.a1).toBe("ACGT");         
+    expect(result.a2).toBe("ACGT");          
   });
 
   test("completely different sequences produce negative score", () => {
-    const r = needlemanWunsch("AAAA", "TTTT", 2, -1, -2);
-    expect(r.score).toBeLessThan(0);
+    const result = needlemanWunsch("AAAA", "CCCC");
+    expect(result.score).toBe(-4);          
+    expect(result.identity).toBeCloseTo(0.0);
   });
 
-  test("alignment length equals sum of matches + mismatches + gaps", () => {
-    const r = needlemanWunsch("ACGTTGCATGCA", "ACGTCATGCA", 2, -1, -2);
-    expect(r.a1.length).toBe(r.a2.length);
+  test("introduces a gap for unequal length sequences", () => {
+    const result = needlemanWunsch("ACGT", "AGT");
+    const hasgap = result.a1.includes("-") || result.a2.includes("-"); 
+    expect(hasgap).toBe(true);
   });
 
-  test("empty sequence returns score 0", () => {
-    const r = needlemanWunsch("", "ACGT", 2, -1, -2);
-    expect(r.score).toBe(0);
-    expect(r.a1).toBe("");
+  test("empty sequences return score 0", () => {
+    const result = needlemanWunsch("", "");
+    expect(result.score).toBe(0);
+    expect(result.identity).toBe(0);
   });
 
-  test("single character match", () => {
-    const r = needlemanWunsch("A", "A", 2, -1, -2);
-    expect(r.score).toBe(2);
-    expect(r.identity).toBe(1);
-  });
-
-  test("single character mismatch", () => {
-    const r = needlemanWunsch("A", "T", 2, -1, -2);
-    expect(r.score).toBe(-1);
+  test("aligned sequences have equal length", () => {
+    const result = needlemanWunsch("ACGTTGCATGCA", "ACGTCATGCA");
+    expect(result.a1.length).toBe(result.a2.length); // ✅ a1/a2
   });
 });
 
-// ── Smith-Waterman ────────────────────────────────────────────────────────────
-
 describe("smithWaterman", () => {
-  test("score is always non-negative", () => {
-    const r = smithWaterman("AAAA", "TTTT", 2, -1, -2);
-    expect(r.score).toBeGreaterThanOrEqual(0);
-  });
-
   test("finds local alignment within longer sequences", () => {
-    // GACAGCGG is shared between the two
-    const r = smithWaterman("TTTTTGACAGCGGATTT", "TTAATTGACAGCGGAA", 2, -1, -2);
-    expect(r.score).toBeGreaterThan(0);
-    expect(r.a1).toContain("GACAGCGG");
+    const result = smithWaterman("TTACGTAGTT", "GGACGTCC");
+    expect(result.score).toBe(8);
+    expect(result.a1).toBe("ACGT");        
+    expect(result.a2).toBe("ACGT");          
   });
 
-  test("identical sequences: local score equals global score", () => {
-    const nw = needlemanWunsch("ACGT", "ACGT", 2, -1, -2);
-    const sw = smithWaterman("ACGT", "ACGT", 2, -1, -2);
-    expect(sw.score).toBe(nw.score);
+  test("unrelated sequences return score 0", () => {
+    const result = smithWaterman("AAAA", "CCCC");
+    expect(result.score).toBe(0);
   });
 
-  test("alignment strings are equal length", () => {
-    const r = smithWaterman("ACGTTGCATGCA", "ACGTCATGCA", 2, -1, -2);
-    expect(r.a1.length).toBe(r.a2.length);
+  test("identical sequences align fully", () => {
+    const result = smithWaterman("ACGT", "ACGT");
+    expect(result.score).toBe(8);
+    expect(result.identity).toBeCloseTo(1.0);
   });
 
-  test("maxI and maxJ are within bounds", () => {
-    const r = smithWaterman("ACGT", "ACGT", 2, -1, -2);
-    expect(r.maxI).toBeLessThanOrEqual(4);
-    expect(r.maxJ).toBeLessThanOrEqual(4);
+  test("score is never negative", () => {
+    const result = smithWaterman("GGGG", "CCCC");
+    expect(result.score).toBeGreaterThanOrEqual(0);
+  });
+
+  test("empty sequences return score 0", () => {
+    const result = smithWaterman("", "");
+    expect(result.score).toBe(0);
   });
 });

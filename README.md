@@ -2,7 +2,6 @@
 
 A high-performance genomic sequence alignment tool built to demonstrate modern web development and algorithmic skills. This application provides a rich user interface for running both global (Needleman-Wunsch) and local (Smith-Waterman) alignments. It features dual implementations in Python and JavaScript, showcasing versatility across different technology stacks.
 
-This project was developed by Tamara Ezveđ as part of an application for the Bending Spoons Fellowship.
 
 ## 🌟 Features
 

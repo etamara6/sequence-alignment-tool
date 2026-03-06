@@ -6,7 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 > An interactive, full-stack genomic sequence alignment tool — visualise Needleman-Wunsch and Smith-Waterman in real time, powered by a Python/Flask backend and a React frontend.
-
+---
+[![Live Demo](https://img.shields.io/badge/live%20demo-UI-46E3B7?logo=render)](https://sequence-alignment-ui.onrender.com)
+[![API](https://img.shields.io/badge/api-live-46E3B7?logo=render)](https://sequence-alignment-api.onrender.com/api/health)
 ---
 
 ## 🧠 What This Project Demonstrates

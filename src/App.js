@@ -149,7 +149,7 @@ function MSAView({ msaResult }) {
       <div style={{ marginBottom: 12, fontSize: 11, color: "#c4a0b0", fontStyle: "italic" }}>
         Guide tree merges: {guide_tree.map(([i, j, d], idx) => (
           <span key={idx}>
-            {idx > 0 && " → "}
+            {idx > 0 && " → "}}>
             ({labels[i]} + {labels[j]}, dist={d.toFixed(2)})
           </span>
         ))}
@@ -172,7 +172,6 @@ function MSAView({ msaResult }) {
                   {row.split("").map((c, ci) => {
                     const isGap = c === "-";
                     const isMatch = cons[ci] !== "·" && !isGap;
-                    const isMismatch = cons[ci] === "·" && !isGap;
                     return (
                       <span key={ci} style={{
                         color: isGap ? "#e8608a" : isMatch ? "#a855a0" : "#d4904a",
@@ -372,7 +371,7 @@ export default function App() {
 
         {/* Mode selector */}
         <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center" }}>
-          {["pairwise", "msa"].map(m => (
+          {['pairwise', 'msa'].map(m => (
             <button key={m}
               className={`algo-btn ${mode === m ? "active" : ""}`}
               onClick={() => setMode(m)}>
@@ -389,7 +388,7 @@ export default function App() {
           <>
             {/* Algorithm selector */}
             <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-              {["NW", "SW"].map(a => (
+              {['NW', 'SW'].map(a => (
                 <button key={a}
                   className={`algo-btn ${algo === a.toLowerCase() ? "active" : ""}`}
                   onClick={() => setAlgo(a.toLowerCase())}>
@@ -412,7 +411,7 @@ export default function App() {
             {/* Input card */}
             <div className="card">
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                {[["Sequence 1 ✦", seq1, setSeq1], ["Sequence 2 ✦", seq2, setSeq2]].map(([label, val, setter]) => (
+                {[['Sequence 1 ✦', seq1, setSeq1], ['Sequence 2 ✦', seq2, setSeq2]].map(([label, val, setter]) => (
                   <div key={label}>
                     <div className="section-label">{label}</div>
                     <textarea value={val} onChange={e => setter(e.target.value.toUpperCase())} rows={2} />
@@ -420,7 +419,7 @@ export default function App() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                {[["Match ♡", match, setMatch], ["Mismatch", mismatch, setMismatch], ["Gap", gap, setGap]].map(([label, val, setter]) => (
+                {[['Match ♡', match, setMatch], ['Mismatch', mismatch, setMismatch], ['Gap', gap, setGap]].map(([label, val, setter]) => (
                   <label key={label} style={{ fontSize: 12, color: "#ad6080", display: "flex", alignItems: "center", gap: 8 }}>
                     {label}
                     <input type="number" value={val} onChange={e => setter(Number(e.target.value))} className="number-input" />
@@ -437,13 +436,7 @@ export default function App() {
             {/* Stats row */}
             {result && (
               <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-                {[
-                  ["Score",     result.score],
-                  ["Identity",  (result.identity * 100).toFixed(1) + "%"],
-                  ["Gaps",      result.gaps],
-                  ["Length",    result.a1.length + " cols"],
-                  ["Time",      result.elapsed + " ms"],
-                ].map(([k, v]) => (
+                {[['Score',     result.score], ['Identity',  (result.identity * 100).toFixed(1) + "%"], ['Gaps',      result.gaps], ['Length',    result.a1.length + " cols"], ['Time',      result.elapsed + " ms"]].map(([k, v]) => (
                   <div key={k} className="stat-card">
                     <div className="stat-label">{k}</div>
                     <div className="stat-value">{v}</div>
@@ -455,7 +448,7 @@ export default function App() {
 
             {/* Tabs */}
             <div style={{ display: "flex", borderBottom: "1px solid #f8bbd0" }}>
-              {["alignment", "matrix"].map(t => (
+              {['alignment', 'matrix'].map(t => (
                 <button key={t} className={`tab-btn ${tab === t ? "active" : ""}`} onClick={() => setTab(t)}>
                   {t === "alignment" ? "✦ Alignment View" : "✦ DP Matrix"}
                 </button>
@@ -540,7 +533,7 @@ export default function App() {
                 <button onClick={addSequence} disabled={msaSeqs.length >= 10} className="preset-btn">
                   + Add sequence
                 </button>
-                {[["Match ♡", match, setMatch], ["Mismatch", mismatch, setMismatch], ["Gap", gap, setGap]].map(([label, val, setter]) => (
+                {[['Match ♡', match, setMatch], ['Mismatch', mismatch, setMismatch], ['Gap', gap, setGap]].map(([label, val, setter]) => (
                   <label key={label} style={{ fontSize: 12, color: "#ad6080", display: "flex", alignItems: "center", gap: 8 }}>
                     {label}
                     <input type="number" value={val} onChange={e => setter(Number(e.target.value))} className="number-input" />
@@ -591,5 +584,3 @@ export default function App() {
 
       </div>
     </div>
-  );
-}

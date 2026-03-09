@@ -1,7 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 import time
 
 @dataclass
@@ -39,6 +39,18 @@ class AlignmentResult:
             f"  {mid}\n"
             f"  {self.seq2_aligned}\n"
         )
+
+
+@dataclass
+class MSAResult:
+    """Result of a Multiple Sequence Alignment via progressive alignment."""
+    sequences:      List[str]          # original (unaligned) sequences
+    aligned:        List[str]          # aligned sequences (same length, padded with '-')
+    labels:         List[str]          # sequence labels (e.g. "Seq1", "Seq2", ...)
+    guide_tree:     List[tuple]        # list of (i, j, distance) merge steps
+    avg_identity:   float              # mean pairwise identity over the MSA columns
+    elapsed_ms:     float
+    algorithm:      str = "Progressive MSA (NW guide tree)"
 
 
 @dataclass
@@ -177,7 +189,6 @@ def smith_waterman(
     dp  = np.zeros((m + 1, n + 1), dtype=np.int32)
     ptr = np.zeros((m + 1, n + 1), dtype=np.uint8)
 
-    # Standard row-by-row fill (avoids tie-breaking issues in anti-diagonal approach)
     for i in range(1, m + 1):
         for j in range(1, n + 1):
             s = scheme.match if seq1[i - 1] == seq2[j - 1] else scheme.mismatch
@@ -226,6 +237,203 @@ def smith_waterman(
         matrix=dp if store_matrix else None,
     )
 
+
+# ── Multiple Sequence Alignment (Progressive / ClustalW-style) ───────────────
+
+def _pairwise_distance(seq1: str, seq2: str, scheme: ScoringScheme) -> float:
+    """
+    Distance = 1 - identity of a Needleman-Wunsch pairwise alignment.
+    Used to build the guide tree.
+    """
+    res = needleman_wunsch(seq1, seq2, scheme)
+    return 1.0 - res.identity
+
+
+def _build_guide_tree(sequences: List[str], scheme: ScoringScheme) -> List[tuple]:
+    """
+    UPGMA-style greedy guide tree.
+    Returns a list of merge steps: (index_a, index_b, distance).
+    The cheapest (most similar) pair is merged first.
+    """
+    n = len(sequences)
+    # distance matrix
+    dist = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(i + 1, n):
+            d = _pairwise_distance(sequences[i], sequences[j], scheme)
+            dist[i][j] = dist[j][i] = d
+
+    active = list(range(n))
+    steps: List[tuple] = []
+
+    while len(active) > 1:
+        best_d = float("inf")
+        best_pair = (0, 1)
+        for idx_a in range(len(active)):
+            for idx_b in range(idx_a + 1, len(active)):
+                i, j = active[idx_a], active[idx_b]
+                if dist[i][j] < best_d:
+                    best_d = dist[i][j]
+                    best_pair = (i, j)
+
+        i, j = best_pair
+        steps.append((i, j, best_d))
+        active.remove(j)   # merge j into i
+
+    return steps
+
+
+def _align_profiles(profile_a: List[str], profile_b: List[str],
+                    scheme: ScoringScheme) -> tuple[List[str], List[str]]:
+    """
+    Align two groups of already-aligned sequences (profiles) using the
+    consensus of each profile as a representative.
+
+    A gap in either profile is propagated to ALL sequences in that profile.
+    This is the 'once a gap, always a gap' rule used by ClustalW.
+    """
+    def consensus(seqs: List[str]) -> str:
+        if not seqs:
+            return ""
+        out = []
+        for col in zip(*seqs):
+            non_gap = [c for c in col if c != "-"]
+            out.append(non_gap[0] if non_gap else "-")
+        return "".join(out)
+
+    rep_a = consensus(profile_a)
+    rep_b = consensus(profile_b)
+
+    res = needleman_wunsch(rep_a, rep_b, scheme)
+    col_a, col_b = res.seq1_aligned, res.seq2_aligned
+
+    def expand_profile(profile: List[str], aligned_rep: str,
+                       original_rep: str) -> List[str]:
+        """
+        Re-insert gaps introduced by NW into every sequence of the profile.
+        We walk along `aligned_rep`; whenever we see a '-' that was NOT
+        in `original_rep`, we insert a '-' at that position in every seq.
+        """
+        orig_iter = iter(range(len(original_rep)))
+        new_seqs = [""] * len(profile)
+        orig_idx = 0
+
+        for ch in aligned_rep:
+            if ch == "-":
+                # a new gap column — insert '-' everywhere in this profile
+                for k in range(len(profile)):
+                    new_seqs[k] += "-"
+            else:
+                # a real character — copy the original column from every seq
+                for k in range(len(profile)):
+                    new_seqs[k] += profile[k][orig_idx] if orig_idx < len(profile[k]) else "-"
+                orig_idx += 1
+
+        return new_seqs
+
+    new_a = expand_profile(profile_a, col_a, rep_a)
+    new_b = expand_profile(profile_b, col_b, rep_b)
+    return new_a, new_b
+
+
+def progressive_msa(
+    sequences: List[str],
+    labels:    Optional[List[str]] = None,
+    scheme:    ScoringScheme = ScoringScheme(),
+) -> MSAResult:
+    """
+    Progressive Multiple Sequence Alignment (ClustalW-style).
+
+    Algorithm:
+      1. Compute all pairwise NW distances  → O(N² · L²)
+      2. Build a greedy UPGMA guide tree    → O(N²)
+      3. Merge profiles in guide-tree order → O(N · L²)
+
+    Parameters
+    ----------
+    sequences : list of raw (unaligned) DNA/protein strings
+    labels    : optional sequence names; defaults to ["Seq1", "Seq2", ...]
+    scheme    : ScoringScheme shared with pairwise steps
+
+    Returns
+    -------
+    MSAResult with .aligned containing all sequences padded to the same length.
+    """
+    t0 = time.perf_counter()
+
+    if not sequences:
+        raise ValueError("At least one sequence is required.")
+    if len(sequences) == 1:
+        elapsed = (time.perf_counter() - t0) * 1000
+        lbl = labels or ["Seq1"]
+        return MSAResult(
+            sequences=sequences,
+            aligned=list(sequences),
+            labels=lbl,
+            guide_tree=[],
+            avg_identity=1.0,
+            elapsed_ms=elapsed,
+        )
+
+    labels = labels or [f"Seq{i + 1}" for i in range(len(sequences))]
+    seqs = [s.upper().strip() for s in sequences]
+
+    # Step 1 + 2: guide tree
+    guide_tree = _build_guide_tree(seqs, scheme)
+
+    # Step 3: progressive merging
+    # Each cluster is a list of (label_index, aligned_string) pairs.
+    # We track which original index belongs to which cluster.
+    clusters: List[List[int]]          = [[i] for i in range(len(seqs))]
+    profiles: List[List[str]]          = [[s] for s in seqs]
+
+    for (i, j, _dist) in guide_tree:
+        new_a, new_b = _align_profiles(profiles[i], profiles[j], scheme)
+        # merge j into i
+        profiles[i] = new_a + new_b
+        clusters[i] = clusters[i] + clusters[j]
+        profiles[j] = []
+        clusters[j] = []
+
+    # The final aligned profile is whichever cluster survived
+    final_profile = next(p for p in profiles if p)
+    final_cluster = next(c for c in clusters if c)
+
+    # Re-order back to original sequence order
+    order = {orig_idx: pos for pos, orig_idx in enumerate(final_cluster)}
+    aligned = [""] * len(seqs)
+    for pos, orig_idx in enumerate(final_cluster):
+        aligned[orig_idx] = final_profile[pos]
+
+    # Pad to equal length (should already be equal, but defensive)
+    max_len = max(len(a) for a in aligned)
+    aligned = [a.ljust(max_len, "-") for a in aligned]
+
+    # Compute average pairwise identity over MSA columns
+    n = len(aligned)
+    total_identity = 0.0
+    pairs = 0
+    for a in range(n):
+        for b in range(a + 1, n):
+            matches = sum(x == y and x != "-"
+                          for x, y in zip(aligned[a], aligned[b]))
+            col_len = max(len(aligned[a]), 1)
+            total_identity += matches / col_len
+            pairs += 1
+    avg_identity = total_identity / max(pairs, 1)
+
+    elapsed = (time.perf_counter() - t0) * 1000
+    return MSAResult(
+        sequences=sequences,
+        aligned=aligned,
+        labels=labels,
+        guide_tree=guide_tree,
+        avg_identity=avg_identity,
+        elapsed_ms=elapsed,
+    )
+
+
+# ── BlastLike ─────────────────────────────────────────────────────────────────
 
 class BlastLike:
     def __init__(self, k: int = 6, drop: int = 16, band: int = 30, scheme: ScoringScheme = ScoringScheme()):
@@ -340,7 +548,17 @@ def demo() -> None:
     res  = smith_waterman(seq1, seq2, scheme)
     print(res)
 
-    _banner("3. BLAST-like Heuristic Search")
+    _banner("3. Progressive MSA (3 sequences)")
+    msa = progressive_msa(
+        ["ACGTTGCATGCA", "ACGTCATGCA", "ACGCATGCA"],
+        labels=["Seq1", "Seq2", "Seq3"],
+        scheme=scheme,
+    )
+    print(f"Avg identity: {msa.avg_identity:.1%}  |  Time: {msa.elapsed_ms:.2f} ms")
+    for lbl, aln in zip(msa.labels, msa.aligned):
+        print(f"  {lbl}: {aln}")
+
+    _banner("4. BLAST-like Heuristic Search")
     import random
     random.seed(42)
     genome = "".join(random.choices("ACGT", k=2000))
@@ -364,5 +582,3 @@ def demo() -> None:
 
 if __name__ == "__main__":
     demo()
-
-

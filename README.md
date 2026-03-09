@@ -1,3 +1,4 @@
+
 # 🧬 Sequence Alignment Studio
 
 ![CI](https://github.com/etamara6/sequence-alignment-tool/actions/workflows/ci.yml/badge.svg)
@@ -6,9 +7,12 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 > An interactive, full-stack genomic sequence alignment tool — visualise Needleman-Wunsch and Smith-Waterman in real time, powered by a Python/Flask backend and a React frontend.
+
 ---
+
 [![Live Demo](https://img.shields.io/badge/live%20demo-UI-46E3B7?logo=render)](https://sequence-alignment-ui.onrender.com)
 [![API](https://img.shields.io/badge/api-live-46E3B7?logo=render)](https://sequence-alignment-api.onrender.com/api/health)
+
 ---
 
 ## 🧠 What This Project Demonstrates
@@ -71,14 +75,14 @@ Algorithm:   Needleman-Wunsch
 
 **Output**
 ```
-Algorithm : Needleman-Wunsch (global)
+Algorithm : Needleman-Wunsch (Global)
 Score     : 16
 Identity  : 83.3%
 Time      : 0.41 ms
 
   ACGTTGCATGCA
   |||| |||||||
-  ACGT-CATGCA
+  ACGT-CATGCA-
 ```
 
 ---
@@ -86,7 +90,7 @@ Time      : 0.41 ms
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────┐        HTTP/JSON        ┌──────────────────────────┐
+┌──────���──────────────────┐        HTTP/JSON        ┌──────────────────────────┐
 │   React Frontend        │ ──── POST /api/align ──▶ │   Flask Backend          │
 │   src/App.js            │ ◀─── AlignmentResult ─── │   api.py                 │
 │   src/algorithms.js     │                          │   sequence_alignment.py  │
@@ -126,7 +130,16 @@ npm start
 # → http://localhost:3000  (proxies /api/* to Flask automatically)
 ```
 
-### Step 4 — (Optional) Python CLI demo
+### Step 4 — (Optional) Configure API URL
+
+By default the React app proxies `/api/*` to `http://localhost:5000` via the `proxy` field in `package.json`.  
+To point to a different backend (e.g. a deployed API), set the environment variable before starting:
+
+```bash
+REACT_APP_API_URL=https://your-api-url.onrender.com npm start
+```
+
+### Step 5 — (Optional) Python CLI demo
 ```bash
 python sequence_alignment.py
 ```
